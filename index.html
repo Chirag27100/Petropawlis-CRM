@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Petropawlis — Staff Portal</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg:         #090E16;
+    --surface:    #0F1623;
+    --border:     #1C2A3E;
+    --border2:    #243347;
+    --accent:     #2B7EC1;
+    --accent-dim: rgba(43,126,193,0.15);
+    --teal:       #32BEC8;
+    --green:      #5BBF45;
+    --red:        #E84040;
+    --orange:     #F5A623;
+    --text:       #E8F0FA;
+    --muted:      #7A8FA8;
+    --font-head:  'Nunito', sans-serif;
+    --font-body:  'DM Sans', sans-serif;
+  }
+
+  body {
+    font-family: var(--font-body);
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    /* Brand-coloured radial glow hints */
+    background-image:
+      radial-gradient(ellipse at 15% 20%, rgba(43,126,193,0.10) 0%, transparent 55%),
+      radial-gradient(ellipse at 85% 80%, rgba(50,190,200,0.07) 0%, transparent 50%),
+      radial-gradient(ellipse at 50% 90%, rgba(91,191,69,0.05) 0%, transparent 50%);
+  }
+
+  .login-card {
+    width: 100%;
+    max-width: 400px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 48px 40px;
+    text-align: center;
+    box-shadow: 0 8px 48px rgba(0,0,0,0.5), 0 0 0 1px rgba(43,126,193,0.1);
+  }
+
+  /* Paw icon with brand colours */
+  .logo-area {
+    margin-bottom: 20px;
+  }
+  .paw-icon {
+    font-size: 52px;
+    display: block;
+    animation: float 3s ease-in-out infinite;
+  }
+  @keyframes float {
+    0%, 100% { transform: translateY(0) rotate(-5deg); }
+    50% { transform: translateY(-8px) rotate(5deg); }
+  }
+
+  /* Brand name styled like logo */
+  .brand-name {
+    font-family: var(--font-head);
+    font-size: 30px;
+    font-weight: 800;
+    letter-spacing: -0.5px;
+    margin-bottom: 2px;
+  }
+  .brand-name .petro  { color: var(--text); }
+  .brand-name .pawlis { color: var(--accent); }
+
+  .brand-sub {
+    font-size: 11px;
+    color: var(--muted);
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    margin-bottom: 4px;
+  }
+
+  /* 4-dot paw colour bar */
+  .paw-dots {
+    display: flex;
+    gap: 6px;
+    justify-content: center;
+    margin: 10px 0 32px;
+  }
+  .paw-dots span {
+    width: 10px; height: 10px; border-radius: 50%;
+    display: inline-block;
+  }
+
+  .pin-label {
+    font-size: 11px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 16px;
+    display: block;
+  }
+
+  .pin-dots {
+    display: flex;
+    gap: 14px;
+    justify-content: center;
+    margin-bottom: 32px;
+  }
+
+  .pin-dot {
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: var(--border);
+    border: 2px solid var(--muted);
+    transition: all 0.2s ease;
+  }
+  .pin-dot.filled {
+    background: var(--accent);
+    border-color: var(--accent);
+    transform: scale(1.2);
+    box-shadow: 0 0 8px rgba(43,126,193,0.5);
+  }
+
+  .pin-pad {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+    max-width: 260px;
+    margin: 0 auto 24px;
+  }
+
+  .pin-btn {
+    background: var(--border);
+    border: 1px solid rgba(255,255,255,0.05);
+    color: var(--text);
+    font-family: var(--font-body);
+    font-size: 22px;
+    font-weight: 500;
+    height: 62px;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.12s ease;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .pin-btn:active, .pin-btn:hover {
+    background: var(--accent);
+    color: #fff;
+    transform: scale(0.95);
+    box-shadow: 0 4px 12px rgba(43,126,193,0.4);
+  }
+  .pin-btn.del { font-size: 18px; color: var(--muted); }
+  .pin-btn.empty { background: transparent; border: none; cursor: default; }
+
+  .error-msg {
+    color: var(--red);
+    font-size: 13px;
+    min-height: 20px;
+    margin-bottom: 8px;
+    transition: opacity 0.2s;
+  }
+
+  .hint {
+    color: var(--muted);
+    font-size: 12px;
+    margin-top: 20px;
+  }
+  .hint span {
+    background: var(--border2);
+    padding: 2px 10px;
+    border-radius: 20px;
+    font-family: monospace;
+    color: var(--accent);
+    font-size: 13px;
+  }
+
+  /* Coloured bottom edge */
+  .login-card::after {
+    content: '';
+    display: block;
+    height: 3px;
+    background: linear-gradient(90deg, var(--red), var(--green), var(--teal), var(--orange), var(--accent));
+    border-radius: 0 0 20px 20px;
+    margin: 32px -40px -48px;
+  }
+
+  @media (max-width: 480px) {
+    .login-card { padding: 40px 24px; }
+    .login-card::after { margin: 32px -24px -40px; }
+  }
+</style>
+</head>
+<body>
+<div class="login-card">
+  <div class="logo-area">
+    <span class="paw-icon">🐾</span>
+  </div>
+
+  <div class="brand-name">
+    <span class="petro">Petro</span><span class="pawlis">pawlis</span>
+  </div>
+  <div class="brand-sub">Pet Resort</div>
+
+  <div class="paw-dots">
+    <span style="background:#E84040;"></span>
+    <span style="background:#5BBF45;"></span>
+    <span style="background:#32BEC8;"></span>
+    <span style="background:#F5A623;"></span>
+  </div>
+
+  <span class="pin-label">Enter Staff PIN</span>
+  <div class="pin-dots">
+    <div class="pin-dot" id="d0"></div>
+    <div class="pin-dot" id="d1"></div>
+    <div class="pin-dot" id="d2"></div>
+    <div class="pin-dot" id="d3"></div>
+  </div>
+
+  <div class="error-msg" id="errorMsg"></div>
+
+  <div class="pin-pad">
+    <button class="pin-btn" onclick="pressKey('1')">1</button>
+    <button class="pin-btn" onclick="pressKey('2')">2</button>
+    <button class="pin-btn" onclick="pressKey('3')">3</button>
+    <button class="pin-btn" onclick="pressKey('4')">4</button>
+    <button class="pin-btn" onclick="pressKey('5')">5</button>
+    <button class="pin-btn" onclick="pressKey('6')">6</button>
+    <button class="pin-btn" onclick="pressKey('7')">7</button>
+    <button class="pin-btn" onclick="pressKey('8')">8</button>
+    <button class="pin-btn" onclick="pressKey('9')">9</button>
+    <button class="pin-btn empty"></button>
+    <button class="pin-btn" onclick="pressKey('0')">0</button>
+    <button class="pin-btn del" onclick="deleteKey()">⌫</button>
+  </div>
+
+  <p class="hint">Demo PIN: <span>1234</span></p>
+</div>
+
+<script src="js/supabase.js"></script>
+<script src="js/auth.js"></script>
+<script>
+  let pin = '';
+
+  if (window.Auth.isLoggedIn()) {
+    window.location.href = 'dashboard/dashboard.html';
+  }
+
+  function updateDots() {
+    for (let i = 0; i < 4; i++) {
+      document.getElementById('d' + i).classList.toggle('filled', i < pin.length);
+    }
+  }
+
+  function pressKey(k) {
+    if (pin.length >= 4) return;
+    pin += k;
+    updateDots();
+    document.getElementById('errorMsg').textContent = '';
+    if (pin.length === 4) submitPin();
+  }
+
+  function deleteKey() {
+    pin = pin.slice(0, -1);
+    updateDots();
+  }
+
+  async function submitPin() {
+    const ok = await window.Auth.login(pin);
+    if (ok) {
+      window.location.href = 'dashboard/dashboard.html';
+    } else {
+      document.getElementById('errorMsg').textContent = 'Incorrect PIN. Try again.';
+      pin = '';
+      updateDots();
+    }
+  }
+
+  document.addEventListener('keydown', e => {
+    if (e.key >= '0' && e.key <= '9') pressKey(e.key);
+    if (e.key === 'Backspace') deleteKey();
+  });
+</script>
+</body>
+</html>

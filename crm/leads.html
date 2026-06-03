@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Leads Pipeline — Pawsome Resort</title>
+<link rel="stylesheet" href="../js/shared.css">
+<style>
+  .pipeline { display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:24px;overflow-x:auto; }
+  @media(max-width:900px) { .pipeline { grid-template-columns:repeat(2,1fr); } }
+  @media(max-width:500px) { .pipeline { grid-template-columns:1fr; } }
+
+  .pipeline-col { background:var(--surface);border:1px solid var(--border);border-radius:10px;overflow:hidden; }
+  .pipeline-col-header { padding:12px 14px;font-size:12px;font-weight:500;letter-spacing:1px;text-transform:uppercase;display:flex;align-items:center;justify-content:space-between; }
+  .pipeline-col-header .count { background:var(--border2);padding:2px 8px;border-radius:20px;font-size:11px; }
+  .pipeline-col-body { padding:8px;min-height:80px; }
+
+  .lead-card {
+    background:var(--surface2);
+    border:1px solid var(--border2);
+    border-radius:8px;
+    padding:12px;
+    margin-bottom:8px;
+    cursor:pointer;
+    transition:all 0.15s;
+  }
+  .lead-card:hover { border-color:var(--accent);transform:translateY(-1px); }
+  .lead-card-name { font-size:13px;font-weight:500;margin-bottom:4px; }
+  .lead-card-pet { font-size:12px;color:var(--muted); }
+  .lead-card-service { font-size:11px;margin-top:6px; }
+
+  .stage-new .pipeline-col-header { color:var(--blue); border-bottom:2px solid var(--blue); }
+  .stage-contacted .pipeline-col-header { color:var(--yellow); border-bottom:2px solid var(--yellow); }
+  .stage-qualified .pipeline-col-header { color:var(--green); border-bottom:2px solid var(--green); }
+  .stage-lost .pipeline-col-header { color:var(--red); border-bottom:2px solid var(--red); }
+</style>
+</head>
+<body>
+
+<div id="sidebar" class="sidebar"></div>
+<div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+<div class="main">
+  <div class="topbar">
+    <div style="display:flex;align-items:center;gap:12px;">
+      <button class="hamburger" id="hamburger"><span></span><span></span><span></span></button>
+      <span class="topbar-title">Leads Pipeline</span>
+    </div>
+    <div class="topbar-right">
+      <button class="btn btn-primary btn-sm" onclick="openAddLead()">+ Add Lead</button>
+    </div>
+  </div>
+
+  <div class="page-content">
+
+    <!-- Stats -->
+    <div class="stat-grid" style="grid-template-columns:repeat(4,1fr);" id="leadStats"></div>
+
+    <!-- Search -->
+    <div style="margin-bottom:16px;">
+      <div class="search-bar">
+        <span>🔍</span>
+        <input type="text" placeholder="Search leads by name, pet, service..." id="leadSearch" oninput="filterLeads()">
+      </div>
+    </div>
+
+    <!-- Pipeline Board -->
+    <div class="pipeline" id="pipelineBoard"></div>
+
+    <!-- All Leads Table -->
+    <div class="section-card">
+      <div class="section-header">
+        <span class="section-title">All Leads</span>
+        <span id="leadTableCount" style="font-size:12px;color:var(--muted);"></span>
+      </div>
+      <div class="table-wrap" id="leadsTable"></div>
+    </div>
+
+  </div>
+</div>
+
+<!-- Lead Detail Modal -->
+<div class="modal-overlay" id="leadModal">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-title" id="leadModalTitle">Lead Details</span>
+      <button class="modal-close" onclick="closeLeadModal()">✕</button>
+    </div>
+    <div id="leadModalContent"></div>
+  </div>
+</div>
+
+<!-- Add Lead Modal -->
+<div class="modal-overlay" id="addLeadModal">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-title">New Lead</span>
+      <button class="modal-close" onclick="closeAddLead()">✕</button>
+    </div>
+    <div class="form-grid">
+      <div class="form-group"><label class="form-label">Owner Name</label><input class="form-input" id="lName" placeholder="Priya Sharma"></div>
+      <div class="form-group"><label class="form-label">Phone</label><input class="form-input" id="lPhone" placeholder="98450XXXXX"></div>
+    </div>
+    <div class="form-grid">
+      <div class="form-group"><label class="form-label">Email</label><input class="form-input" id="lEmail" placeholder="email@gmail.com"></div>
+      <div class="form-group"><label class="form-label">Pet Name</label><input class="form-input" id="lPetName" placeholder="Bruno"></div>
+    </div>
+    <div class="form-grid">
+      <div class="form-group"><label class="form-label">Pet Breed</label><input class="form-input" id="lBreed" placeholder="Labrador"></div>
+      <div class="form-group"><label class="form-label">Service Interest</label>
+        <select class="form-select" id="lService">
+          <option value="boarding">🏠 Boarding</option>
+          <option value="grooming">✂️ Grooming</option>
+          <option value="swimming">🏊 Swimming</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-group"><label class="form-label">Source</label>
+      <select class="form-select" id="lSource">
+        <option value="website_chat">Website Chat</option>
+        <option value="referral">Referral</option>
+        <option value="instagram">Instagram</option>
+        <option value="google">Google</option>
+        <option value="walk_in">Walk-in</option>
+      </select>
+    </div>
+    <div class="form-group"><label class="form-label">Notes</label><textarea class="form-textarea" id="lNotes" placeholder="Any notes..."></textarea></div>
+    <div style="display:flex;gap:10px;justify-content:flex-end;">
+      <button class="btn btn-ghost" onclick="closeAddLead()">Cancel</button>
+      <button class="btn btn-primary" onclick="saveLead()">Add Lead</button>
+    </div>
+  </div>
+</div>
+
+<script src="../js/supabase.js"></script>
+<script src="../js/auth.js"></script>
+<script src="../js/utils.js"></script>
+<script src="../js/whatsapp.js"></script>
+<script src="../js/layout.js"></script>
+<script src="leads.js"></script>
+</body>
+</html>

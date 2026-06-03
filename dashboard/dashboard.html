@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dashboard — Pawsome Resort</title>
+<link rel="stylesheet" href="../js/shared.css">
+<style>
+  .briefing-banner {
+    background: linear-gradient(135deg, rgba(232,168,124,0.15) 0%, rgba(126,200,160,0.1) 100%);
+    border: 1px solid var(--accent);
+    border-radius: 14px;
+    padding: 20px 24px;
+    margin-bottom: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 16px;
+  }
+  .briefing-title { font-family: var(--font-head); font-size: 18px; color: var(--accent); margin-bottom: 4px; }
+  .briefing-sub { font-size: 13px; color: var(--muted); }
+  .briefing-chips { display: flex; gap: 10px; flex-wrap: wrap; }
+  .briefing-chip {
+    display: flex; align-items: center; gap: 6px;
+    padding: 7px 14px; border-radius: 20px;
+    font-size: 13px; font-weight: 500;
+    border: 1px solid;
+  }
+  .chip-orange { background: var(--accent-dim); border-color: var(--accent); color: var(--accent); }
+  .chip-green { background: var(--green-dim); border-color: var(--green); color: var(--green); }
+  .chip-blue { background: var(--blue-dim); border-color: var(--teal); color: var(--teal); }
+  .chip-red { background: var(--red-dim); border-color: var(--red); color: var(--red); }
+
+  .pending-alert {
+    background: var(--red-dim);
+    border: 1px solid var(--red);
+    border-radius: 10px;
+    padding: 12px 18px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 20px;
+    font-size: 13px;
+    color: var(--red);
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .revenue-summary {
+    background: var(--green-dim);
+    border: 1px solid var(--green);
+    border-radius: 10px;
+    padding: 14px 18px;
+    margin-bottom: 20px;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+  }
+  .rev-item { text-align: center; }
+  .rev-label { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 4px; }
+  .rev-val { font-size: 17px; font-weight: 600; }
+
+  .appt-row-actions { display: flex; align-items: center; gap: 6px; }
+  .icon-btn {
+    width: 28px; height: 28px; border-radius: 6px; border: 1px solid var(--border2);
+    background: none; color: var(--muted); font-size: 13px; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    transition: all 0.15s;
+  }
+  .icon-btn:hover { border-color: var(--accent); color: var(--accent); }
+  .icon-btn.wa:hover { border-color: #25D366; color: #25D366; }
+  .icon-btn.cam:hover { border-color: var(--teal); color: var(--teal); }
+
+  .export-bar {
+    display: flex; gap: 8px; margin-bottom: 20px; flex-wrap: wrap;
+  }
+</style>
+</head>
+<body>
+
+<div id="sidebar" class="sidebar"></div>
+<div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+<div class="main">
+  <div class="topbar">
+    <div style="display:flex;align-items:center;gap:12px;">
+      <button class="hamburger" id="hamburger"><span></span><span></span><span></span></button>
+      <span class="topbar-title">Dashboard</span>
+    </div>
+    <div class="topbar-right">
+      <span id="todayDate" style="font-size:13px;color:var(--muted);"></span>
+      <button class="btn btn-ghost btn-sm" onclick="exportDayPDF()">📥 Export Day</button>
+    </div>
+  </div>
+
+  <div class="page-content">
+
+    <!-- DAILY BRIEFING BANNER -->
+    <div class="briefing-banner" id="briefingBanner">
+      <div>
+        <div class="briefing-title">☀️ Good Morning — Today's Briefing</div>
+        <div class="briefing-sub" id="briefingDate"></div>
+      </div>
+      <div class="briefing-chips" id="briefingChips"></div>
+      <a href="briefing.html" class="btn btn-primary btn-sm">Full Briefing →</a>
+    </div>
+
+    <!-- VACCINATION ALERT -->
+    <div id="vaccinationAlert"></div>
+
+    <!-- PENDING PAYMENTS ALERT -->
+    <div class="pending-alert" id="pendingAlert" style="display:none;">
+      <span>⚠️ <strong id="pendingCount">0</strong> unpaid transactions today — <strong id="pendingAmount"></strong> pending</span>
+      <a href="../appointments/appointments.html?tab=pending" style="color:var(--red);font-weight:500;font-size:13px;text-decoration:none;">Review →</a>
+    </div>
+
+    <!-- DAILY REVENUE SUMMARY -->
+    <div class="revenue-summary" id="revSummary">
+      <div class="rev-item">
+        <div class="rev-label">Collected Today</div>
+        <div class="rev-val" id="revCollected" style="color:var(--green);">—</div>
+      </div>
+      <div class="rev-item">
+        <div class="rev-label">Pending</div>
+        <div class="rev-val" id="revPending" style="color:var(--yellow);">—</div>
+      </div>
+      <div class="rev-item">
+        <div class="rev-label">Total Day</div>
+        <div class="rev-val" id="revTotal" style="color:var(--accent);">—</div>
+      </div>
+    </div>
+
+    <!-- STAT TILES -->
+    <div class="stat-grid" id="statGrid">
+      <div class="stat-card accent">
+        <div class="stat-label">This Month</div>
+        <div class="stat-value" id="statMonth">—</div>
+        <div class="stat-sub" id="statMonthGrowth"></div>
+        <div class="stat-icon">💰</div>
+      </div>
+      <div class="stat-card green">
+        <div class="stat-label">Dogs Boarding</div>
+        <div class="stat-value" id="statBoarding">—</div>
+        <div class="stat-sub" id="statBoardingCap"></div>
+        <div class="stat-icon">🏠</div>
+      </div>
+      <div class="stat-card blue">
+        <div class="stat-label">Today's Appointments</div>
+        <div class="stat-value" id="statAppts">—</div>
+        <div class="stat-sub">Grooming + Swimming</div>
+        <div class="stat-icon">📅</div>
+      </div>
+      <div class="stat-card purple">
+        <div class="stat-label">Checkouts Today</div>
+        <div class="stat-value" id="statCheckouts">—</div>
+        <div class="stat-sub" id="statCheckoutSub"></div>
+        <div class="stat-icon">📤</div>
+      </div>
+    </div>
+
+    <!-- ROW: Revenue by Service + Boarding Status -->
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:24px;" id="midRow">
+      <div class="section-card">
+        <div class="section-header">
+          <span class="section-title">Revenue by Service</span>
+          <span style="font-size:12px;color:var(--muted);">This Month</span>
+        </div>
+        <div class="section-body" id="revenueByService"></div>
+      </div>
+      <div class="section-card">
+        <div class="section-header">
+          <span class="section-title">Boarding Occupancy</span>
+          <a href="../crm/boarding.html" style="font-size:12px;color:var(--accent);text-decoration:none;">View all →</a>
+        </div>
+        <div class="section-body" id="boardingStatus"></div>
+      </div>
+    </div>
+
+    <!-- Revenue Trend -->
+    <div class="section-card" style="margin-bottom:24px;">
+      <div class="section-header">
+        <span class="section-title">Revenue Trend</span>
+        <span style="font-size:12px;color:var(--muted);">Last 6 months</span>
+      </div>
+      <div class="section-body">
+        <div id="revenueTrend" style="height:140px;position:relative;"></div>
+      </div>
+    </div>
+
+    <!-- Today's Schedule -->
+    <div class="section-card">
+      <div class="section-header">
+        <span class="section-title">Today's Schedule</span>
+        <a href="../appointments/appointments.html" style="font-size:12px;color:var(--accent);text-decoration:none;">Full view →</a>
+      </div>
+      <div id="todayAppts"></div>
+    </div>
+
+  </div>
+</div>
+
+<!-- Export PDF (jsPDF via CDN) -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="../js/supabase.js"></script>
+<script src="../js/auth.js"></script>
+<script src="../js/utils.js"></script>
+<script src="../js/whatsapp.js"></script>
+<script src="../js/layout.js"></script>
+<script src="dashboard.js"></script>
+</body>
+</html>

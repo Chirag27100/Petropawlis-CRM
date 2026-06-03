@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Daily Briefing — Pawsome Resort</title>
+<link rel="stylesheet" href="../js/shared.css">
+<style>
+  .briefing-hero {
+    background: linear-gradient(135deg, rgba(43,126,193,0.06) 0%, rgba(50,190,200,0.04) 100%);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 28px 28px 20px;
+    margin-bottom: 28px;
+    text-align: center;
+  }
+  .briefing-hero h1 { font-family: var(--font-head); font-size: 28px; font-style: italic; color: var(--accent); margin-bottom: 4px; }
+  .briefing-hero p { color: var(--muted); font-size: 14px; font-family: var(--font-body); }
+
+  .section-divider {
+    display: flex; align-items: center; gap: 12px; margin: 24px 0 16px;
+  }
+  .section-divider span { font-size: 11px; text-transform: uppercase; letter-spacing: 2px; color: var(--muted); white-space: nowrap; }
+  .section-divider::before, .section-divider::after { content:''; flex:1; height:1px; background:var(--border); }
+
+  .checkout-card {
+    background: #fff;
+    border: 1.5px solid var(--orange);
+    border-radius: 12px;
+    padding: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-bottom: 10px;
+    box-shadow: 0 2px 8px rgba(232,150,14,0.08);
+  }
+  .appt-brief-card {
+    background: #fff;
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--accent);
+    border-radius: 10px;
+    padding: 14px 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 8px;
+    flex-wrap: wrap;
+    box-shadow: 0 1px 4px rgba(43,126,193,0.04);
+  }
+  .appt-brief-card.swimming { border-left-color: var(--teal); }
+  .appt-brief-card.grooming { border-left-color: var(--green); }
+  .time-tag {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--accent);
+    min-width: 60px;
+  }
+  .headcount-row {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+    margin-bottom: 12px;
+  }
+  .headcount-card {
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 16px;
+    box-shadow: 0 1px 4px rgba(43,126,193,0.05);
+  }
+  .notification-badge {
+    background: var(--red-dim);
+    border: 1px solid var(--red);
+    color: var(--red);
+    border-radius: 8px;
+    padding: 8px 14px;
+    font-size: 13px;
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .wa-action { display: flex; gap: 6px; }
+  .btn-wa {
+    background: #25D366;
+    color: white;
+    border: none;
+    padding: 7px 14px;
+    border-radius: 8px;
+    font-size: 12px;
+    cursor: pointer;
+    font-family: var(--font-body);
+    font-weight: 500;
+    transition: opacity 0.15s;
+  }
+  .btn-wa:hover { opacity: 0.85; }
+  .btn-cam {
+    background: var(--blue-dim);
+    color: var(--teal);
+    border: 1px solid var(--teal);
+    padding: 7px 12px;
+    border-radius: 8px;
+    font-size: 12px;
+    cursor: pointer;
+    font-family: var(--font-body);
+    transition: all 0.15s;
+  }
+  .btn-cam:hover { background: var(--teal); color: white; }
+</style>
+</head>
+<body>
+
+<div id="sidebar" class="sidebar"></div>
+<div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+<div class="main">
+  <div class="topbar">
+    <div style="display:flex;align-items:center;gap:12px;">
+      <button class="hamburger" id="hamburger"><span></span><span></span><span></span></button>
+      <span class="topbar-title">Daily Briefing</span>
+    </div>
+    <div class="topbar-right">
+      <span id="briefingTime" style="font-size:13px;color:var(--muted);"></span>
+    </div>
+  </div>
+
+  <div class="page-content">
+
+    <div class="briefing-hero">
+      <h1 id="greetingText">Good Morning ☀️</h1>
+      <p id="briefingDateStr"></p>
+    </div>
+
+    <!-- Notifications -->
+    <div id="notifications"></div>
+
+    <!-- BOARDING HEADCOUNT -->
+    <div class="section-divider"><span>🏠 Boarding Headcount</span></div>
+    <div class="headcount-row" id="headcountRow"></div>
+
+    <!-- DOGS CHECKING OUT TODAY -->
+    <div class="section-divider"><span>📤 Checkouts Today</span></div>
+    <div id="checkoutsSection"></div>
+
+    <!-- APPOINTMENTS NEXT 2 HRS -->
+    <div class="section-divider"><span>⏰ Appointments — Next 2 Hours</span></div>
+    <div id="upcomingAppts"></div>
+
+    <!-- ALL BOARDING DOGS (daily update panel) -->
+    <div class="section-divider"><span>🐕 All Boarding Dogs — Daily Updates</span></div>
+    <div id="boardingUpdates"></div>
+
+  </div>
+</div>
+
+<script src="../js/supabase.js"></script>
+<script src="../js/auth.js"></script>
+<script src="../js/utils.js"></script>
+<script src="../js/whatsapp.js"></script>
+<script src="../js/layout.js"></script>
+<script>
+window.Auth.requireAuth();
+window.Layout.init('briefing');
+
+const now = new Date();
+const hour = now.getHours();
+const greet = hour < 12 ? 'Good Morning ☀️' : hour < 17 ? 'Good Afternoon 🌤️' : 'Good Evening 🌙';
+document.getElementById('greetingText').textContent = greet;
+document.getElementById('briefingDateStr').textContent = now.toLocaleDateString('en-IN', { weekday:'long', day:'numeric', month:'long', year:'numeric' });
+document.getElementById('briefingTime').textContent = now.toLocaleTimeString('en-IN', { hour:'2-digit', minute:'2-digit' });
+
+async function whatsappUpdate(phone, petName) {
+  if (!phone) return window.Utils.toast('No phone number', 'error');
+  const msg = window.WA.templates.dailyUpdate(petName);
+  await window.WA.send(phone, msg);
+  window.Utils.toast(`Daily update sent for ${petName} ✅`, 'success');
+}
+function whatsappCamera(phone, petName) {
+  if (!phone) return window.Utils.toast('No phone number', 'error');
+  window.open(`https://wa.me/91${phone}`, '_blank');
+  window.Utils.toast(`WhatsApp opened for ${petName} — attach your photo or video 📸`, 'success');
+}
+
+async function loadBriefing() {
+  const today = now.toISOString().split('T')[0];
+  const [boarding, appointments] = await Promise.all([
+    window.DB.getBoarding(),
+    window.DB.getAppointments(today)
+  ]);
+
+  const active = boarding.filter(b => b.status === 'active' || b.status === 'checkout_today');
+  const checkouts = boarding.filter(b => b.status === 'checkout_today');
+
+  // ─── Notifications ───
+  const notifs = [];
+  if (checkouts.length > 0) notifs.push(`⚠️ ${checkouts.length} dog${checkouts.length>1?'s':''} checking out today`);
+  const unpaidCheckouts = checkouts.filter(b => b.payment_status !== 'paid');
+  if (unpaidCheckouts.length > 0) notifs.push(`💰 ${unpaidCheckouts.length} checkout payment${unpaidCheckouts.length>1?'s':''} pending`);
+  // Swimming 15 min alert
+  const swimSoon = appointments.filter(a => {
+    const [h,m] = a.start_time.split(':').map(Number);
+    const apptMins = h*60+m;
+    const nowMins = now.getHours()*60+now.getMinutes();
+    return a.service_type==='swimming' && apptMins >= nowMins && apptMins <= nowMins+15;
+  });
+  swimSoon.forEach(s => notifs.push(`🏊 Swimming session for ${s.pet_name} (${s.client_name}) starts in ~15 min!`));
+
+  // ─── Birthday Check ───
+  const allClients = await window.DB.getClients();
+  const todayMMDD = now.toISOString().slice(5, 10);
+  const birthdays = allClients.filter(c => c.pet_dob && c.pet_dob.slice(5, 10) === todayMMDD);
+
+  document.getElementById('notifications').innerHTML =
+    birthdays.map(c => `
+      <div class="notification-badge" style="background:var(--accent-dim);border-color:var(--accent);color:var(--accent);display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+        🎂 It's <strong>${c.pet_name}</strong>'s birthday today! Wish ${c.name}
+        ${c.phone ? `<button class="btn btn-ghost btn-sm" style="border-color:var(--accent);color:var(--accent);" onclick="window.WA.send('${c.phone}', '🎂 Happy Birthday to ${c.pet_name}! 🐾 Wishing your furry friend a wonderful day from all of us at Pawliday Inn! 🥳')">Send Wish 🎂</button>` : ''}
+      </div>
+    `).join('') +
+    (notifs.length === 0 ? '' : notifs.map(n => `<div class="notification-badge">🔔 ${n}</div>`).join(''));
+
+  // ─── Headcount ───
+  const CAPACITY = 20;
+  document.getElementById('headcountRow').innerHTML = `
+    <div class="headcount-card">
+      <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px;">Currently Boarding</div>
+      <div style="font-size:32px;font-weight:700;color:var(--accent);">${active.length}</div>
+      <div style="font-size:12px;color:var(--muted);">of ${CAPACITY} capacity</div>
+    </div>
+    <div class="headcount-card">
+      <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px;">Checkouts Today</div>
+      <div style="font-size:32px;font-weight:700;color:${checkouts.length>0?'var(--yellow)':'var(--green)'};">${checkouts.length}</div>
+      <div style="font-size:12px;color:var(--muted);">${checkouts.length>0?'need to process':' all clear'}</div>
+    </div>
+    <div class="headcount-card">
+      <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px;">Today's Appointments</div>
+      <div style="font-size:32px;font-weight:700;color:var(--teal);">${appointments.filter(a=>a.service_type!=='boarding').length}</div>
+      <div style="font-size:12px;color:var(--muted);">grooming + swimming</div>
+    </div>
+    <div class="headcount-card">
+      <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px;">Available Slots</div>
+      <div style="font-size:32px;font-weight:700;color:var(--green);">${CAPACITY - active.length}</div>
+      <div style="font-size:12px;color:var(--muted);">boarding slots free</div>
+    </div>
+  `;
+
+  // ─── Checkouts ───
+  if (checkouts.length === 0) {
+    document.getElementById('checkoutsSection').innerHTML = `<div style="color:var(--muted);font-size:14px;padding:12px 0;">✅ No checkouts today — all clear!</div>`;
+  } else {
+    document.getElementById('checkoutsSection').innerHTML = checkouts.map(b => `
+      <div class="checkout-card">
+        <div style="display:flex;align-items:center;gap:12px;">
+          <span style="font-size:28px;">🐕</span>
+          <div>
+            <div style="font-size:15px;font-weight:600;">${b.pet_name} <span style="color:var(--muted);font-weight:400;font-size:13px;">· ${b.breed}</span></div>
+            <div style="font-size:12px;color:var(--muted);">${b.client_name} · ${b.phone || 'No phone'}</div>
+          </div>
+        </div>
+        <div style="text-align:right;">
+          <div style="font-size:14px;font-weight:600;color:var(--accent);">${window.Utils.formatCurrency(b.total)}</div>
+          <div style="font-size:11px;color:${b.payment_status==='paid'?'var(--green)':'var(--red)'};">${b.payment_status==='paid'?'✓ Paid':'⚠ Unpaid'}</div>
+        </div>
+        <div class="wa-action">
+          <button class="btn-wa" onclick="whatsappUpdate('${b.phone||''}','${b.pet_name}')">💬 Update</button>
+          <button class="btn-cam" onclick="whatsappCamera('${b.phone||''}','${b.pet_name}')">📹</button>
+          <a href="../crm/boarding.html" class="btn btn-ghost btn-sm">Check Out</a>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  // ─── Next 2 Hours Appointments ───
+  const nowMins = now.getHours()*60+now.getMinutes();
+  const upcoming = appointments.filter(a => {
+    const [h,m] = a.start_time.split(':').map(Number);
+    const apptMins = h*60+m;
+    return apptMins >= nowMins && apptMins <= nowMins+120 && a.status!=='cancelled' && a.status!=='completed';
+  }).sort((a,b)=>a.start_time.localeCompare(b.start_time));
+
+  if (upcoming.length === 0) {
+    document.getElementById('upcomingAppts').innerHTML = `<div style="color:var(--muted);font-size:14px;padding:12px 0;">No appointments in the next 2 hours.</div>`;
+  } else {
+    document.getElementById('upcomingAppts').innerHTML = upcoming.map(a => {
+      const client = SYNTHETIC.clients.find(c=>c.id===a.client_id);
+      const [h,m] = a.start_time.split(':').map(Number);
+      const minsLeft = h*60+m - nowMins;
+      const isSwim15 = a.service_type==='swimming' && minsLeft <= 15;
+      return `
+        <div class="appt-brief-card ${a.service_type}">
+          <span class="time-tag">${window.Utils.formatTime(a.start_time)}</span>
+          <div style="flex:1;">
+            <div style="font-size:14px;font-weight:500;">${a.pet_name} <span style="color:var(--muted);font-weight:400;">· ${a.client_name}</span></div>
+            <div style="font-size:12px;color:var(--muted);">${window.Utils.getServiceIcon(a.service_type)} ${a.service_type}</div>
+          </div>
+          ${isSwim15 ? '<span style="color:var(--teal);font-size:12px;font-weight:600;">🔔 Starting soon!</span>' : `<span style="color:var(--muted);font-size:12px;">in ${minsLeft}min</span>`}
+          ${client?.phone ? `<button class="btn-cam" onclick="whatsappCamera('${client.phone}','${a.pet_name}')">📹</button>` : ''}
+        </div>
+      `;
+    }).join('');
+  }
+
+  // ─── All Boarding — Daily Update Panel ───
+  document.getElementById('boardingUpdates').innerHTML = active.length === 0
+    ? `<div style="color:var(--muted);font-size:14px;padding:12px 0;">No dogs currently boarding.</div>`
+    : active.map(b => `
+        <div class="checkout-card" style="border-color:var(--border2);">
+          <div style="display:flex;align-items:center;gap:12px;">
+            <span style="font-size:28px;">🐕</span>
+            <div>
+              <div style="font-size:14px;font-weight:600;">${b.pet_name} <span style="color:var(--muted);font-weight:400;">· ${b.breed}</span></div>
+              <div style="font-size:12px;color:var(--muted);">${b.client_name} · Checkout: ${window.Utils.formatDate(b.checkout)}</div>
+            </div>
+          </div>
+          <div class="wa-action">
+            <button class="btn-wa" onclick="whatsappUpdate('${b.phone||''}','${b.pet_name}')">💬 Send Update</button>
+            <button class="btn-cam" onclick="whatsappCamera('${b.phone||''}','${b.pet_name}')">📹 Photo/Video</button>
+          </div>
+        </div>
+      `).join('');
+}
+
+loadBriefing();
+</script>
+</body>
+</html>

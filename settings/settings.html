@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Settings — Pawliday Inn</title>
+<link rel="stylesheet" href="../js/shared.css">
+<style>
+  .settings-section { background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:24px;margin-bottom:20px; }
+  .settings-section h2 { font-size:14px;font-weight:600;color:var(--accent);text-transform:uppercase;letter-spacing:1px;margin-bottom:18px;display:flex;align-items:center;gap:8px; }
+  .settings-row { display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px; }
+  @media(max-width:600px){ .settings-row { grid-template-columns:1fr; } }
+  .settings-label { font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:5px; }
+  .toggle-row { display:flex;align-items:center;justify-content:space-between;padding:12px 0;border-bottom:1px solid var(--border); }
+  .toggle-row:last-child { border-bottom:none; }
+  .toggle-label { font-size:13px;color:var(--text); }
+  .toggle-sub { font-size:11px;color:var(--muted);margin-top:2px; }
+  input[type="checkbox"] { width:18px;height:18px;cursor:pointer;accent-color:var(--accent); }
+</style>
+</head>
+<body>
+
+<div id="sidebar" class="sidebar"></div>
+<div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+<div class="main">
+  <div class="topbar">
+    <div style="display:flex;align-items:center;gap:12px;">
+      <button class="hamburger" id="hamburger"><span></span><span></span><span></span></button>
+      <span class="topbar-title">Settings</span>
+    </div>
+    <div class="topbar-right"></div>
+  </div>
+
+  <div class="page-content">
+
+    <!-- WhatsApp API Config -->
+    <div class="settings-section">
+      <h2>💬 WhatsApp API Config</h2>
+      <div class="settings-row">
+        <div>
+          <div class="settings-label">API URL</div>
+          <input class="form-input" id="waApiUrl" type="text" placeholder="https://api.maytapi.com/api/{phone_id}/sendMessage">
+        </div>
+        <div>
+          <div class="settings-label">API Key</div>
+          <input class="form-input" id="waApiKey" type="password" placeholder="Your x-maytapi-key">
+        </div>
+      </div>
+      <div class="settings-row">
+        <div>
+          <div class="settings-label">From Number (WhatsApp Business)</div>
+          <input class="form-input" id="waFromNumber" type="text" placeholder="919876543210">
+        </div>
+        <div style="display:flex;align-items:flex-end;">
+          <button class="btn btn-primary" style="width:100%;" onclick="saveWAConfig()">💾 Save WhatsApp Config</button>
+        </div>
+      </div>
+      <div style="border-top:1px solid var(--border);padding-top:16px;margin-top:4px;">
+        <div class="settings-label" style="margin-bottom:8px;">Test Send</div>
+        <div style="display:flex;gap:10px;">
+          <input class="form-input" id="waTestPhone" type="text" placeholder="Phone number (e.g. 9845099001)" style="flex:1;">
+          <button class="btn btn-ghost" onclick="testWASend()">📤 Send Test</button>
+        </div>
+        <div style="font-size:11px;color:var(--muted);margin-top:6px;">If no API is configured, this opens wa.me as a fallback.</div>
+      </div>
+    </div>
+
+    <!-- Resort Config -->
+    <div class="settings-section">
+      <h2>🏠 Resort Config</h2>
+      <div class="settings-row">
+        <div>
+          <div class="settings-label">Resort Name</div>
+          <input class="form-input" id="resortName" type="text" placeholder="Pawliday Inn">
+        </div>
+        <div>
+          <div class="settings-label">Boarding Capacity</div>
+          <input class="form-input" id="boardingCapacity" type="number" min="1" placeholder="20">
+        </div>
+      </div>
+      <div style="margin-bottom:14px;">
+        <div class="settings-label">Address (used on invoices)</div>
+        <input class="form-input" id="resortAddress" type="text" placeholder="123 Pet Street, Bengaluru, Karnataka 560001" style="width:100%;">
+      </div>
+      <div style="display:flex;justify-content:flex-end;">
+        <button class="btn btn-primary" onclick="saveResortConfig()">💾 Save Resort Config</button>
+      </div>
+    </div>
+
+    <!-- Notification Preferences -->
+    <div class="settings-section">
+      <h2>🔔 Notification Preferences</h2>
+      <div class="toggle-row">
+        <div>
+          <div class="toggle-label">Auto-send checkout reminder day before?</div>
+          <div class="toggle-sub">Sends a WhatsApp reminder to owners 1 day before their pet's checkout date.</div>
+        </div>
+        <input type="checkbox" id="autoCheckoutReminder">
+      </div>
+      <div class="toggle-row">
+        <div>
+          <div class="toggle-label">Auto-send appointment confirmation on booking?</div>
+          <div class="toggle-sub">Sends a WhatsApp confirmation when a new appointment is created.</div>
+        </div>
+        <input type="checkbox" id="autoApptConfirm">
+      </div>
+      <div style="display:flex;justify-content:flex-end;margin-top:16px;">
+        <button class="btn btn-primary" onclick="saveNotifConfig()">💾 Save Preferences</button>
+      </div>
+    </div>
+
+  </div><!-- /page-content -->
+</div><!-- /main -->
+
+<script src="../js/supabase.js"></script>
+<script src="../js/auth.js"></script>
+<script src="../js/utils.js"></script>
+<script src="../js/whatsapp.js"></script>
+<script src="../js/layout.js"></script>
+<script src="settings.js"></script>
+</body>
+</html>

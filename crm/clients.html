@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Clients — Pawsome Resort</title>
+<link rel="stylesheet" href="../js/shared.css">
+<style>
+  .client-grid { display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px;margin-bottom:24px; }
+
+  .client-card {
+    background:var(--surface);
+    border:1px solid var(--border);
+    border-radius:10px;
+    padding:20px;
+    cursor:pointer;
+    transition:all 0.15s;
+  }
+  .client-card:hover { border-color:var(--accent);transform:translateY(-2px); }
+  .client-card-top { display:flex;align-items:center;gap:12px;margin-bottom:14px; }
+  .client-card-info h3 { font-size:15px;font-weight:500; }
+  .client-card-info p { font-size:12px;color:var(--muted);margin-top:2px; }
+  .client-services { display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px; }
+  .service-tag { padding:3px 10px;background:var(--surface2);border:1px solid var(--border2);border-radius:20px;font-size:11px;color:var(--text2); }
+  .client-ltv { font-size:13px;color:var(--muted); }
+  .client-ltv strong { color:var(--accent);font-family:var(--font-head);font-size:16px; }
+</style>
+</head>
+<body>
+
+<div id="sidebar" class="sidebar"></div>
+<div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+<div class="main">
+  <div class="topbar">
+    <div style="display:flex;align-items:center;gap:12px;">
+      <button class="hamburger" id="hamburger"><span></span><span></span><span></span></button>
+      <span class="topbar-title">Clients</span>
+    </div>
+    <div class="topbar-right">
+      <div style="display:flex;gap:8px;">
+        <button class="btn btn-ghost btn-sm" id="viewToggle" onclick="toggleView()">☰ List</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="page-content">
+    <div class="stat-grid" id="clientStats"></div>
+
+    <div style="display:flex;gap:10px;margin-bottom:20px;flex-wrap:wrap;">
+      <div class="search-bar" style="flex:1;min-width:200px;">
+        <span>🔍</span>
+        <input type="text" placeholder="Search clients, pets, breeds..." id="clientSearch" oninput="filterClients()">
+      </div>
+      <select class="form-select" style="width:auto;" id="serviceFilter" onchange="filterClients()">
+        <option value="">All Services</option>
+        <option value="boarding">Boarding</option>
+        <option value="grooming">Grooming</option>
+        <option value="swimming">Swimming</option>
+      </select>
+      <select class="form-select" style="width:auto;" id="tagFilter" onchange="filterClients()">
+        <option value="">All Tags</option>
+        <option value="vip">VIP</option>
+        <option value="boarding_regular">Boarding Regular</option>
+        <option value="grooming_regular">Grooming Regular</option>
+        <option value="new_client">New Client</option>
+        <option value="at_risk">At Risk</option>
+        <option value="high_ltv">High LTV</option>
+      </select>
+      <button class="btn btn-ghost btn-sm" onclick="segmentBlast('boarding_regular')" title="Send WhatsApp to all boarding regulars">💬 Blast: Boarding Regulars</button>
+    </div>
+
+    <div id="clientGrid" class="client-grid"></div>
+  </div>
+</div>
+
+<!-- Client Detail Modal -->
+<div class="modal-overlay" id="clientModal">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-title" id="clientModalTitle"></span>
+      <button class="modal-close" onclick="closeClientModal()">✕</button>
+    </div>
+    <div id="clientModalContent"></div>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="../js/supabase.js"></script>
+<script src="../js/auth.js"></script>
+<script src="../js/utils.js"></script>
+<script src="../js/whatsapp.js"></script>
+<script src="../js/layout.js"></script>
+<script src="clients.js"></script>
+</body>
+</html>

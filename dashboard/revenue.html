@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Revenue & Reports — Petropawlis</title>
+<link rel="stylesheet" href="../js/shared.css">
+<style>
+  /* ── Period Switcher ── */
+  .period-bar {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: #fff;
+    border: 1.5px solid var(--border2);
+    border-radius: 10px;
+    padding: 4px;
+  }
+  .period-btn {
+    padding: 6px 14px;
+    border-radius: 7px;
+    border: none;
+    background: none;
+    font-family: var(--font-body);
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--muted);
+    cursor: pointer;
+    transition: all 0.18s ease;
+  }
+  .period-btn.active {
+    background: var(--accent);
+    color: #fff;
+    box-shadow: 0 2px 8px rgba(43,126,193,0.3);
+  }
+  .period-btn:hover:not(.active) { background: var(--surface2); color: var(--text); }
+
+  /* ── KPI Cards ── */
+  .kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+    margin-bottom: 24px;
+  }
+  .kpi-card {
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 20px 22px;
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 1px 4px rgba(43,126,193,0.05);
+    transition: transform 0.2s cubic-bezier(0.34,1.56,0.64,1), box-shadow 0.2s ease;
+  }
+  .kpi-card:hover { transform: translateY(-3px); box-shadow: 0 8px 24px rgba(43,126,193,0.12); }
+  .kpi-card::after {
+    content: '';
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    height: 3px;
+    border-radius: 0 0 14px 14px;
+  }
+  .kpi-card.blue::after  { background: var(--accent); }
+  .kpi-card.green::after { background: var(--green); }
+  .kpi-card.teal::after  { background: var(--teal); }
+  .kpi-card.orange::after{ background: var(--orange); }
+
+  .kpi-icon {
+    width: 40px; height: 40px;
+    border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px;
+    margin-bottom: 14px;
+  }
+  .kpi-icon.blue   { background: var(--accent-dim); }
+  .kpi-icon.green  { background: var(--green-dim); }
+  .kpi-icon.teal   { background: var(--teal-dim); }
+  .kpi-icon.orange { background: var(--orange-dim); }
+
+  .kpi-label { font-size: 11px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--muted); margin-bottom: 6px; }
+  .kpi-value { font-family: var(--font-head); font-size: 26px; font-weight: 800; font-style: italic; color: var(--text); line-height: 1; }
+  .kpi-delta {
+    display: inline-flex; align-items: center; gap: 4px;
+    font-size: 12px; font-weight: 600;
+    margin-top: 8px; padding: 3px 8px;
+    border-radius: 20px;
+  }
+  .kpi-delta.up   { background: var(--green-dim);  color: var(--green); }
+  .kpi-delta.down { background: var(--red-dim);    color: var(--red); }
+  .kpi-delta.flat { background: var(--border);     color: var(--muted); }
+
+  /* ── Chart Area ── */
+  .chart-row {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 16px;
+    margin-bottom: 24px;
+  }
+  .chart-card {
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    overflow: hidden;
+    box-shadow: 0 1px 4px rgba(43,126,193,0.05);
+  }
+  .chart-header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 18px 22px 14px;
+    border-bottom: 1px solid var(--border);
+  }
+  .chart-title { font-family: var(--font-head); font-size: 15px; font-weight: 700; font-style: italic; color: var(--text); }
+  .chart-sub   { font-size: 12px; color: var(--muted); font-family: var(--font-body); }
+  .chart-body  { padding: 20px 22px; }
+
+  /* Bar chart */
+  .bar-chart {
+    display: flex;
+    align-items: flex-end;
+    gap: 10px;
+    height: 160px;
+    padding-bottom: 28px;
+    position: relative;
+  }
+  .bar-chart::before {
+    content: '';
+    position: absolute;
+    bottom: 28px; left: 0; right: 0;
+    height: 1px;
+    background: var(--border);
+  }
+  .bar-col {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    height: 100%;
+    cursor: pointer;
+  }
+  .bar-amount { font-size: 9px; color: var(--muted); white-space: nowrap; }
+  .bar-fill-wrap {
+    flex: 1;
+    width: 100%;
+    display: flex;
+    align-items: flex-end;
+  }
+  .bar-fill {
+    width: 100%;
+    border-radius: 5px 5px 0 0;
+    transition: height 0.7s cubic-bezier(0.34,1.2,0.64,1), opacity 0.2s;
+    position: relative;
+    min-height: 4px;
+  }
+  .bar-fill:hover { opacity: 0.8; }
+  .bar-fill.current { box-shadow: 0 -3px 12px rgba(43,126,193,0.3); }
+  .bar-label { font-size: 10px; color: var(--muted); }
+  .bar-col.active .bar-label { color: var(--accent); font-weight: 700; }
+
+  /* Donut chart */
+  .donut-wrap {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+  }
+  .donut-svg { width: 140px; height: 140px; }
+  .donut-legend { width: 100%; }
+  .donut-item {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 8px 0;
+    border-bottom: 1px solid var(--border);
+    font-size: 13px;
+  }
+  .donut-item:last-child { border-bottom: none; }
+  .donut-dot { width: 10px; height: 10px; border-radius: 3px; flex-shrink: 0; }
+  .donut-name { color: var(--text2); display: flex; align-items: center; gap: 8px; }
+  .donut-val  { font-weight: 600; color: var(--text); }
+  .donut-pct  { font-size: 11px; color: var(--muted); margin-left: 4px; }
+
+  /* ── Bottom Row ── */
+  .bottom-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 16px;
+    margin-bottom: 24px;
+  }
+
+  /* Metric list */
+  .metric-list { display: flex; flex-direction: column; gap: 0; }
+  .metric-item {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 13px 0;
+    border-bottom: 1px solid var(--border);
+    transition: background 0.15s;
+  }
+  .metric-item:last-child { border-bottom: none; }
+  .metric-label { font-size: 13px; color: var(--text2); }
+  .metric-val   { font-size: 14px; font-weight: 600; color: var(--text); }
+
+  /* Occupancy history */
+  .occ-row {
+    display: flex; align-items: center; gap: 10px;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--border);
+    font-size: 13px;
+  }
+  .occ-row:last-child { border-bottom: none; }
+  .occ-month { width: 32px; color: var(--muted); font-size: 11px; }
+  .occ-bar-wrap { flex: 1; height: 7px; background: var(--border); border-radius: 4px; overflow: hidden; }
+  .occ-bar-fill { height: 100%; border-radius: 4px; transition: width 0.6s ease; }
+  .occ-pct { width: 36px; text-align: right; font-weight: 600; font-size: 12px; }
+
+  /* Top clients */
+  .client-rank {
+    display: flex; align-items: center; gap: 12px;
+    padding: 11px 0;
+    border-bottom: 1px solid var(--border);
+    transition: background 0.15s;
+  }
+  .client-rank:last-child { border-bottom: none; }
+  .rank-num {
+    width: 22px; height: 22px; border-radius: 6px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 11px; font-weight: 700;
+    background: var(--surface2); color: var(--muted);
+    flex-shrink: 0;
+  }
+  .rank-num.gold   { background: rgba(245,166,35,0.15); color: var(--orange); }
+  .rank-num.silver { background: rgba(50,190,200,0.12); color: var(--teal); }
+  .rank-num.bronze { background: var(--accent-dim); color: var(--accent); }
+  .rank-pet  { font-size: 13px; font-weight: 500; color: var(--text); }
+  .rank-owner{ font-size: 11px; color: var(--muted); }
+  .rank-ltv  { margin-left: auto; font-size: 13px; font-weight: 700; color: var(--text); }
+
+  /* ── Export Bar ── */
+  .export-bar {
+    display: flex; gap: 10px; align-items: center;
+    flex-wrap: wrap;
+  }
+  .export-label { font-size: 13px; color: var(--muted); }
+
+  /* ── Insight Chips ── */
+  .insights-row {
+    display: flex; gap: 10px; flex-wrap: wrap;
+    margin-bottom: 24px;
+  }
+  .insight-chip {
+    display: flex; align-items: center; gap: 8px;
+    background: #fff;
+    border: 1.5px solid var(--border);
+    border-radius: 12px;
+    padding: 10px 16px;
+    font-size: 13px;
+    color: var(--text2);
+    box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+    transition: border-color 0.18s, transform 0.18s;
+    flex: 1;
+    min-width: 200px;
+  }
+  .insight-chip:hover { border-color: var(--accent); transform: translateY(-1px); }
+  .insight-chip .ic-icon { font-size: 18px; }
+  .insight-chip .ic-text strong { display: block; font-weight: 700; color: var(--text); font-size: 14px; }
+
+  /* Tooltip */
+  .bar-tooltip {
+    position: absolute;
+    bottom: calc(100% + 8px);
+    left: 50%; transform: translateX(-50%);
+    background: var(--text);
+    color: #fff;
+    font-size: 11px;
+    padding: 5px 10px;
+    border-radius: 6px;
+    white-space: nowrap;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.15s;
+    z-index: 10;
+  }
+  .bar-fill:hover .bar-tooltip { opacity: 1; }
+
+  @media (max-width: 1024px) {
+    .kpi-grid { grid-template-columns: repeat(2, 1fr); }
+    .chart-row { grid-template-columns: 1fr; }
+    .bottom-row { grid-template-columns: 1fr; }
+  }
+  @media (max-width: 640px) {
+    .kpi-grid { grid-template-columns: 1fr 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<div id="sidebar" class="sidebar"></div>
+<div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+<div class="main">
+  <div class="topbar">
+    <div style="display:flex;align-items:center;gap:12px;">
+      <button class="hamburger" id="hamburger"><span></span><span></span><span></span></button>
+      <span class="topbar-title">Revenue & Reports</span>
+    </div>
+    <div class="topbar-right">
+      <div class="period-bar" id="periodBar">
+        <button class="period-btn active" data-period="month">This Month</button>
+        <button class="period-btn" data-period="quarter">Quarter</button>
+        <button class="period-btn" data-period="year">Year</button>
+      </div>
+      <div class="export-bar">
+        <button class="btn btn-ghost btn-sm" onclick="exportCSV()">📊 CSV</button>
+        <button class="btn btn-primary btn-sm" onclick="exportPDF()">📥 PDF Report</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="page-content">
+
+    <!-- INSIGHT CHIPS -->
+    <div class="insights-row" id="insightsRow"></div>
+
+    <!-- KPI CARDS -->
+    <div class="kpi-grid" id="kpiGrid">
+      <div class="kpi-card blue">
+        <div class="kpi-icon blue">💰</div>
+        <div class="kpi-label">Total Revenue</div>
+        <div class="kpi-value" id="kpiRevenue">—</div>
+        <div class="kpi-delta up" id="kpiRevenueDelta">↑ —</div>
+      </div>
+      <div class="kpi-card green">
+        <div class="kpi-icon green">📈</div>
+        <div class="kpi-label">Avg Booking Value</div>
+        <div class="kpi-value" id="kpiAvgBooking">—</div>
+        <div class="kpi-delta flat" id="kpiAvgDelta">— vs last</div>
+      </div>
+      <div class="kpi-card teal">
+        <div class="kpi-icon teal">🏠</div>
+        <div class="kpi-label">Avg Occupancy Rate</div>
+        <div class="kpi-value" id="kpiOccupancy">—</div>
+        <div class="kpi-delta up" id="kpiOccDelta">— capacity</div>
+      </div>
+      <div class="kpi-card orange">
+        <div class="kpi-icon orange">⚠️</div>
+        <div class="kpi-label">Pending / Uncollected</div>
+        <div class="kpi-value" id="kpiPending">—</div>
+        <div class="kpi-delta down" id="kpiPendingDelta">— transactions</div>
+      </div>
+    </div>
+
+    <!-- CHART ROW: Bar trend + Donut -->
+    <div class="chart-row">
+      <div class="chart-card">
+        <div class="chart-header">
+          <div>
+            <div class="chart-title">Revenue Trend</div>
+            <div class="chart-sub" id="trendSub">Monthly breakdown</div>
+          </div>
+          <div style="display:flex;gap:8px;align-items:center;">
+            <span style="display:flex;align-items:center;gap:5px;font-size:12px;color:var(--muted);"><span style="width:10px;height:10px;border-radius:2px;background:var(--accent);display:inline-block;"></span>Revenue</span>
+          </div>
+        </div>
+        <div class="chart-body">
+          <div class="bar-chart" id="barChart"></div>
+        </div>
+      </div>
+
+      <div class="chart-card">
+        <div class="chart-header">
+          <div>
+            <div class="chart-title">Revenue by Service</div>
+            <div class="chart-sub">Service mix breakdown</div>
+          </div>
+        </div>
+        <div class="chart-body">
+          <div class="donut-wrap">
+            <svg class="donut-svg" viewBox="0 0 140 140" id="donutSvg"></svg>
+            <div class="donut-legend" id="donutLegend"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- BOTTOM ROW: Key Metrics + Occupancy History + Top Clients -->
+    <div class="bottom-row">
+
+      <div class="chart-card">
+        <div class="chart-header">
+          <div class="chart-title">Key Metrics</div>
+          <span style="font-size:12px;color:var(--muted);" id="metricsLabel">This month</span>
+        </div>
+        <div class="chart-body" style="padding:0 22px;">
+          <div class="metric-list" id="keyMetrics"></div>
+        </div>
+      </div>
+
+      <div class="chart-card">
+        <div class="chart-header">
+          <div class="chart-title">Occupancy History</div>
+          <span style="font-size:12px;color:var(--muted);">Last 6 months</span>
+        </div>
+        <div class="chart-body" style="padding:0 22px;">
+          <div id="occupancyHistory"></div>
+        </div>
+      </div>
+
+      <div class="chart-card">
+        <div class="chart-header">
+          <div class="chart-title">Top Clients by LTV</div>
+          <span style="font-size:12px;color:var(--muted);">Lifetime value</span>
+        </div>
+        <div class="chart-body" style="padding:0 22px;">
+          <div id="topClients"></div>
+        </div>
+      </div>
+
+    </div>
+
+  </div><!-- /page-content -->
+</div><!-- /main -->
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="../js/supabase.js"></script>
+<script src="../js/auth.js"></script>
+<script src="../js/utils.js"></script>
+<script src="../js/whatsapp.js"></script>
+<script src="../js/layout.js"></script>
+<script src="revenue.js"></script>
+</body>
+</html>
